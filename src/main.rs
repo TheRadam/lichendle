@@ -19,7 +19,7 @@ async fn main() -> Result<(), Box<libsql::Error>> {
         let lichenised_id = select_random_id();
 
         rows = match conn
-            .query("SELECT photos.photo_id, taxa.name FROM observations_l JOIN photos ON photos.observation_uuid == observations_l.observation_uuid JOIN taxa ON taxa.taxon_id == observations_l.taxon_id WHERE lichenised_id == ?1 LIMIT 1", [lichenised_id])
+            .query("SELECT photos.photo_id, taxa.name, lichenised_id FROM observations_l JOIN photos ON photos.observation_uuid == observations_l.observation_uuid JOIN taxa ON taxa.taxon_id == observations_l.taxon_id WHERE lichenised_id == ?1 LIMIT 1", [lichenised_id])
             .await {
             Ok(rows) => { rows },
             Err(err) => return Err(Box::new(err)),
@@ -44,7 +44,8 @@ fn select_random_id() -> u32 {
 }
 
 fn get_image(id: u32) -> ExitStatus {
-    let jpeg_regex = Regex::new(r".jpeg").unwrap();
+    let jpeg = Regex::new(r".jpeg").unwrap();
+    let png = Regex::new(r".png").unwrap();
     let list = Command::new("aws")
         .arg("s3")
         .arg("ls")
@@ -53,11 +54,15 @@ fn get_image(id: u32) -> ExitStatus {
         .output()
         .expect("Failed to list files in dir");
 
-
     //some are jps, some are jpegs
-    let extension = match jpeg_regex.is_match(String::from_utf8(list.stdout).unwrap().as_str()) {
+    let extension = match jpeg.is_match(String::from_utf8(list.stdout.clone()).unwrap().as_str()) {
         true => { "jpeg" }
-        false => { "jpg" }
+        false => {
+            match png.is_match(String::from_utf8(list.stdout).unwrap().as_str()) {
+                true => { "png" }
+                false => { "jpg" }
+            }
+        }
     };
 
     Command::new("aws")
