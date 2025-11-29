@@ -60,7 +60,7 @@ fn get_image(id: u32, extension: String) -> String {
         .arg("cp")
         .arg("--no-sign-request")
         .arg(format!("s3://inaturalist-open-data/photos/{}/original.{}", id, extension))
-        .arg(format!("image.{}", extension))
+        .arg(format!("html/image.{}", extension))
         .status()
         .expect("Failed to download image");
 
@@ -69,7 +69,7 @@ fn get_image(id: u32, extension: String) -> String {
 
 fn generate_page(file_name: String, taxon_name: String) {
     let path = Path::new("template.html");
-    let path_new_file = Path::new("index.html");
+    let path_new_file = Path::new("html/index.html");
     let mut file = File::create(path_new_file).unwrap();
     let contents = fs::read_to_string(path)
         .expect("Should have been able to read the file");
