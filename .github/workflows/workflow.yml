@@ -41,6 +41,8 @@ jobs:
     permissions:
       pages: write
       id-token: write
+      contents: read
+      packages: write
 
     steps:
       - name: Checkout code
@@ -58,6 +60,8 @@ jobs:
     permissions:
       pages: write
       id-token: write
+      contents: read
+      packages: write
 
     environment:
       name: github-pages
