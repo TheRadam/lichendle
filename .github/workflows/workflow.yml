@@ -40,9 +40,6 @@ jobs:
           TURSO_DATABASE_URL: ${{ secrets.TURSO_DATABASE_URL }}
         run: CARGO_INCREMENTAL="0" DEV_MODE=0 RUST_MIN_STACK="33554432" TURSO_AUTH_TOKEN=${{ secrets.TURSO_AUTH_TOKEN }} TURSO_DATABASE_URL=${{ secrets.TURSO_DATABASE_URL }} cargo run --profile ${{ matrix.BUILD_TARGET }}
 
-      - name: Checkout code
-        uses: actions/checkout@v4
-
       - name: Upload static files as artifact
         uses: actions/upload-pages-artifact@v3
         with:
