@@ -4,6 +4,9 @@ on: workflow_dispatch
 
 jobs:
   build:
+    environment:
+      name: lichens
+
     runs-on: ubuntu-latest
 
     strategy:
