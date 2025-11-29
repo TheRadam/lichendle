@@ -24,10 +24,10 @@ async fn main() -> Result<(), Box<libsql::Error>> {
 
         let conn = db.connect()?;
 
-        let lichenised_id = select_random_id();
+        let relative_id = select_random_id();
 
         rows = match conn
-            .query("SELECT photos.photo_id, taxa.name, lichenised_id FROM observations_l JOIN photos ON photos.observation_uuid == observations_l.observation_uuid JOIN taxa ON taxa.taxon_id == observations_l.taxon_id WHERE lichenised_id == ?1 LIMIT 1", [lichenised_id])
+            .query("SELECT photos.photo_id, taxa.name, photos.extension FROM observations JOIN photos ON photos.observation_uuid == observations.observation_uuid JOIN taxa ON taxa.taxon_id == observations.taxon_id WHERE relative_id == ?1 LIMIT 1", [relative_id])
             .await {
             Ok(rows) => { rows },
             Err(err) => return Err(Box::new(err)),
@@ -40,8 +40,9 @@ async fn main() -> Result<(), Box<libsql::Error>> {
         println!("Row {}: {:?}", i, row.get_value(i).unwrap());
     }
 
+    let extension = row.get_value(2).unwrap();
+    let image = get_image(*row.get_value(0).unwrap().as_integer().unwrap() as u32, extension.as_text().unwrap().clone());
     let name = row.get_value(1).unwrap();
-    let image = get_image(*row.get_value(0).unwrap().as_integer().unwrap() as u32);
 
     generate_page(image, name.as_text().unwrap().clone());
 
@@ -50,31 +51,10 @@ async fn main() -> Result<(), Box<libsql::Error>> {
 }
 
 fn select_random_id() -> u32 {
-    rand::random_range(1..=2372981) as u32
+    rand::random_range(1..=414405) as u32
 }
 
-fn get_image(id: u32) -> String {
-    let jpeg = Regex::new(r".jpeg").unwrap();
-    let png = Regex::new(r".png").unwrap();
-    let list = Command::new("aws")
-        .arg("s3")
-        .arg("ls")
-        .arg("--no-sign-request")
-        .arg(format!("s3://inaturalist-open-data/photos/{}/", id))
-        .output()
-        .expect("Failed to list files in dir");
-
-    //some are jps, some are jpegs
-    let extension = match jpeg.is_match(String::from_utf8(list.stdout.clone()).unwrap().as_str()) {
-        true => { "jpeg" }
-        false => {
-            match png.is_match(String::from_utf8(list.stdout).unwrap().as_str()) {
-                true => { "png" }
-                false => { "jpg" }
-            }
-        }
-    };
-
+fn get_image(id: u32, extension: String) -> String {
     Command::new("aws")
         .arg("s3")
         .arg("cp")
@@ -89,7 +69,7 @@ fn get_image(id: u32) -> String {
 
 fn generate_page(file_name: String, taxon_name: String) {
     let path = Path::new("template.html");
-    let path_new_file = Path::new("new_index.html");
+    let path_new_file = Path::new("index.html");
     let mut file = File::create(path_new_file).unwrap();
     let contents = fs::read_to_string(path)
         .expect("Should have been able to read the file");
