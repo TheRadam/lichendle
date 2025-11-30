@@ -40,16 +40,16 @@
             </div>
         </nav>
     </header>
-
+    <br>
     <div class="relative isolate px-6 pt-14 lg:px-8">
-        <div class="w-2/5 m-auto">
+        <div class="w-full lg:w-2/5 md:w-3/5 m-auto">
             <img
                     class="object-cover object-center w-full h-96"
                     src="#IMAGE#"
             />
         </div>
         <br>
-        <div class="w-2/5 m-auto text-sm/6 font-semibold text-gray-900 dark:text-white">
+        <div class="w-full lg:w-2/5 md:w-3/5 m-auto text-sm/6 font-semibold text-gray-900 dark:text-white">
             <label for="search" class="block mb-2.5 text-sm font-medium text-heading sr-only ">What lichen is this?</label>
             <div class="relative">
                 <div class="absolute inset-y-0 start-0 flex items-center ps-3 pointer-events-none">
@@ -58,12 +58,9 @@
                 <input type="search" id="search" class="block w-full p-3 ps-9 bg-neutral-secondary-medium border border-default-medium text-heading text-sm rounded-base focus:ring-brand focus:border-brand shadow-xs placeholder:text-body" placeholder="Type here..." required />
                 <button type="button" class="absolute end-1.5 bottom-1.5 text-white bg-emerald-800 hover:bg-emerald-900 box-border border border-transparent focus:ring-4 focus:ring-brand-medium shadow-xs font-medium leading-5 rounded text-xs px-3 py-1.5 focus:outline-none" onclick="classify()">Classify</button>
             </div>
-            <div id="result" class="h-[1rem] w-2/5 m-auto text-sm/6 font-semibold text-gray-900 dark:text-white"></div>
+            <div id="result" class="h-[1rem] w-full lg:w-2/5 md:w-3/5 m-auto text-sm/6 font-semibold text-gray-900 dark:text-white"></div>
         </div>
 
-        <div aria-hidden="true" class="absolute inset-x-0 top-[calc(100%-13rem)] -z-10 transform-gpu overflow-hidden blur-3xl sm:top-[calc(100%-30rem)]">
-            <div style="clip-path: polygon(74.1% 44.1%, 100% 61.6%, 97.5% 26.9%, 85.5% 0.1%, 80.7% 2%, 72.5% 32.5%, 60.2% 62.4%, 52.4% 68.1%, 47.5% 58.3%, 45.2% 34.5%, 27.5% 76.7%, 0.1% 64.9%, 17.9% 100%, 27.6% 76.8%, 76.1% 97.7%, 74.1% 44.1%)" class="relative left-[calc(50%+3rem)] aspect-1155/678 w-144.5 -translate-x-1/2 bg-linear-to-tr from-[#cbf542] to-[#cbf542] opacity-30 sm:left-[calc(50%+36rem)] sm:w-288.75"></div>
-        </div>
     </div>
 </div>
 <script>
