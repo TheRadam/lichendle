@@ -68,16 +68,26 @@ fn get_image(id: u32, extension: String) -> String {
 }
 
 fn generate_page(file_name: String, taxon_name: String) {
-    let path = Path::new("template.html");
+    let template_path = Path::new("template.html");
+    let genus_path = Path::new("genus.csv");
+    let species_path = Path::new("species.csv");
     let path_new_file = Path::new("html/index.html");
     let mut file = File::create(path_new_file).unwrap();
-    let contents = fs::read_to_string(path)
-        .expect("Should have been able to read the file");
+    let template = fs::read_to_string(template_path)
+        .expect("Should have been able to read template file");
+    let genus_list = fs::read_to_string(genus_path)
+        .expect("Should have been able to read genus file");
+    let species_list = fs::read_to_string(species_path)
+        .expect("Should have been able to read species file");
 
     let image_src = Regex::new(r"#IMAGE#").unwrap();
     let name = Regex::new(r"#NAME#").unwrap();
-    let x = image_src.replace(contents.as_str(), file_name);
-    let y = name.replace(x.as_ref(), taxon_name);
+    let genus = Regex::new(r"#GENUS#").unwrap();
+    let species = Regex::new(r"#SPECIES#").unwrap();
+    let w = image_src.replace(template.as_str(), file_name);
+    let x = name.replace(w.as_ref(), taxon_name);
+    let y = genus.replace(x.as_ref(), genus_list);
+    let z = species.replace(y.as_ref(), species_list);
 
-    file.write_all(y.as_bytes()).expect("Should have been able to write file");
+    file.write_all(z.as_bytes()).expect("Should have been able to write file");
 }
