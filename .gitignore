@@ -1,1 +1,4 @@
-/target
+*/target
+/html
+lichens.db
+/.idea
