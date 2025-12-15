@@ -27,7 +27,7 @@ async fn main() -> Result<(), Box<libsql::Error>> {
         let relative_id = select_random_id();
 
         rows = match conn
-            .query("SELECT photos.photo_id, taxa.name, photos.extension FROM observations JOIN photos ON photos.observation_uuid == observations.observation_uuid JOIN taxa ON taxa.taxon_id == observations.taxon_id WHERE relative_id == ?1 LIMIT 1", [relative_id])
+            .query("SELECT photos.photo_id, taxa.name, photos.extension, photos.license, observers.login, observers.name FROM observations JOIN photos ON photos.observation_uuid == observations.observation_uuid JOIN taxa ON taxa.taxon_id == observations.taxon_id JOIN observers ON observers.observer_id == photos.observer_id WHERE relative_id == ?1 LIMIT 1", [relative_id])
             .await {
             Ok(rows) => { rows },
             Err(err) => return Err(Box::new(err)),
@@ -37,14 +37,26 @@ async fn main() -> Result<(), Box<libsql::Error>> {
     let row = rows.next().await?.unwrap();
 
     for i in 0..row.column_count() {
-        println!("Row {}: {:?}", i, row.get_value(i).unwrap());
+        println!("Row {}: {:?}", i, row.get_value(i)?);
     }
 
-    let extension = row.get_value(2).unwrap();
-    let image = get_image(*row.get_value(0).unwrap().as_integer().unwrap() as u32, extension.as_text().unwrap().clone());
-    let name = row.get_value(1).unwrap();
+    let name = row.get_value(1)?;
+    let extension = row.get_value(2)?;
+    let image = get_image(*row.get_value(0)?.as_integer().unwrap() as u32, extension.as_text().unwrap().clone());
+    let license = row.get_value(3)?;
 
-    generate_page(image, name.as_text().unwrap().clone());
+    let cite = match row.get_value(5)?.is_null() {
+        true => row.get_value(4)?,
+        false => row.get_value(5)?
+    };
+
+    let citation = match license.as_text().unwrap().as_str() {
+        "CC0" => format!("{}, no rights reserved (CC0)", cite.as_text().unwrap()),
+        "PD" => String::from(""),
+        _ => format!("© {}, some rights reserved ({})", cite.as_text().unwrap(), license.as_text().unwrap())
+    };
+
+    generate_page(image, name.as_text().unwrap().clone(), citation);
 
     println!("Time Taken: {}ms", start.elapsed().unwrap().as_millis());
     Ok(())
@@ -67,24 +79,23 @@ fn get_image(id: u32, extension: String) -> String {
     format!("image.{}", extension)
 }
 
-fn generate_page(file_name: String, taxon_name: String) {
+fn generate_page(file_name: String, taxon_name: String, cite: String) {
     let template_path = Path::new("template.html");
     let genus_path = Path::new("genus.csv");
     let species_path = Path::new("species.csv");
     let path_new_file = Path::new("html/index.html");
     let mut file = File::create(path_new_file).unwrap();
-    let template = fs::read_to_string(template_path)
-        .expect("Should have been able to read template file");
-    let genus_list = fs::read_to_string(genus_path)
-        .expect("Should have been able to read genus file");
-    let species_list = fs::read_to_string(species_path)
-        .expect("Should have been able to read species file");
+    let template = fs::read_to_string(template_path).expect("Should have been able to read template file");
+    let genus_list = fs::read_to_string(genus_path).expect("Should have been able to read genus file");
+    let species_list = fs::read_to_string(species_path).expect("Should have been able to read species file");
 
     let image_src = Regex::new(r"#IMAGE#").unwrap();
     let name = Regex::new(r"#NAME#").unwrap();
     let genus = Regex::new(r"#GENUS#").unwrap();
     let species = Regex::new(r"#SPECIES#").unwrap();
-    let w = image_src.replace(template.as_str(), file_name);
+    let citation = Regex::new(r"#CITATION#").unwrap();
+    let v = citation.replace(template.as_str(), cite);
+    let w = image_src.replace(v.as_ref(), file_name);
     let x = name.replace(w.as_ref(), taxon_name);
     let y = genus.replace(x.as_ref(), genus_list);
     let z = species.replace(y.as_ref(), species_list);
