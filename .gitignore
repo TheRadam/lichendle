@@ -1,4 +1,6 @@
-*/target
+/target
 /html
 lichendle.db
 /.idea
+scripts/*/*.csv
+scripts/*/*.html
