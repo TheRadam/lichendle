@@ -11,13 +11,7 @@
         <style type="text/tailwindcss">
             @custom-variant dark (&:where(.dark, .dark *));
         </style>
-        <script>
-            if (localStorage.getItem('dark-mode') === 'true' || (!('dark-mode' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-                document.querySelector('html').classList.add('dark');
-            } else {
-                document.querySelector('html').classList.remove('dark');
-            }
-        </script>
+        <script src="query-darkmode.js"></script>
         <title>Lichendle</title>
     </head>
     <body class="bg-white dark:bg-gray-900">
@@ -69,53 +63,13 @@
                             #SPECIES#
                         </datalist>
 
-                        <button type="button" class="text-white dark:bg-emerald-800 dark:hover:bg-emerald-900 bg-emerald-600 hover:bg-emerald-700 shadow-xs font-medium leading-5 rounded text-3xl lg:text-xl px-3 py-3.5" onclick="classify()">Classify</button>
+                        <button type="button" class="text-white dark:bg-emerald-800 dark:hover:bg-emerald-900 bg-emerald-600 hover:bg-emerald-700 shadow-xs font-medium leading-5 rounded text-3xl lg:text-xl px-3 py-3.5" onclick="classify('#NAME#')">Classify</button>
                     </div>
                     <div id="result" class="h-[1rem] text-center w-full lg:w-2/5 md:w-3/5 m-auto text-5xl lg:text-xl font-semibold text-gray-900 dark:text-white"></div>
                 </div>
 
             </div>
         </div>
-        <script>
-            function classify() {
-                var name = "#NAME#";
-                let genus = document.getElementById("genus").value;
-                let species = document.getElementById("species").value;
-                console.log(genus);
-                console.log(species);
-                console.log([genus, species].join(" ").toLowerCase() == name.toLowerCase());
-
-                if ([genus, species].join(" ").toLowerCase() == name.toLowerCase()) {
-                    document.getElementById("result").innerHTML = "<br><span class='text-emerald-600'>YOU GOT THAT LICHEN!</span>"
-                } else {
-                    document.getElementById("result").innerHTML = "<br><span class='text-red-600'>WRONG!</span>"
-                }
-            }
-        </script>
-        <script>
-            const lightSwitches = document.querySelectorAll('.light-switch');
-            if (lightSwitches.length > 0) {
-                lightSwitches.forEach((lightSwitch, i) => {
-                    if (localStorage.getItem('dark-mode') === 'true') {
-                        lightSwitch.checked = true;
-                    }
-                    lightSwitch.addEventListener('change', () => {
-                        const { checked } = lightSwitch;
-                        lightSwitches.forEach((el, n) => {
-                            if (n !== i) {
-                                el.checked = checked;
-                            }
-                        });
-                        if (lightSwitch.checked) {
-                            document.documentElement.classList.add('dark');
-                            localStorage.setItem('dark-mode', true);
-                        } else {
-                            document.documentElement.classList.remove('dark');
-                            localStorage.setItem('dark-mode', false);
-                        }
-                    });
-                });
-            }
-        </script>
+        <script src="classify.js"></script><script src="darkmode.js"></script>
     </body>
 </html>

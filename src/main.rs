@@ -58,7 +58,7 @@ async fn main() -> Result<(), Box<libsql::Error>> {
 
     generate_page(image, name.as_text().unwrap().clone(), citation);
 
-    copy_dir_all(Path::new("favicon"), Path::new("html")).expect("Couldn't copy faviocn");
+    copy_dir_all(Path::new("bundle"), Path::new("html")).expect("Couldn't copy favicon");
 
     println!("Time Taken: {}ms", start.elapsed().unwrap().as_millis());
     Ok(())
