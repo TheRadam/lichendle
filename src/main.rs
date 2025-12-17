@@ -1,4 +1,4 @@
-use std::fs;
+use std::{fs, io};
 use std::process::{Command};
 use std::time::SystemTime;
 use libsql::{Builder};
@@ -58,6 +58,8 @@ async fn main() -> Result<(), Box<libsql::Error>> {
 
     generate_page(image, name.as_text().unwrap().clone(), citation);
 
+    copy_dir_all(Path::new("favicon"), Path::new("html")).expect("Couldn't copy faviocn");
+
     println!("Time Taken: {}ms", start.elapsed().unwrap().as_millis());
     Ok(())
 }
@@ -101,4 +103,19 @@ fn generate_page(file_name: String, taxon_name: String, cite: String) {
     let z = species.replace(y.as_ref(), species_list);
 
     file.write_all(z.as_bytes()).expect("Should have been able to write file");
+}
+
+
+fn copy_dir_all(src: impl AsRef<Path>, dst: impl AsRef<Path>) -> io::Result<()> {
+    fs::create_dir_all(&dst)?;
+    for entry in fs::read_dir(src)? {
+        let entry = entry?;
+        let ty = entry.file_type()?;
+        if ty.is_dir() {
+            copy_dir_all(entry.path(), dst.as_ref().join(entry.file_name()))?;
+        } else {
+            fs::copy(entry.path(), dst.as_ref().join(entry.file_name()))?;
+        }
+    }
+    Ok(())
 }
