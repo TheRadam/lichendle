@@ -150,7 +150,7 @@ impl Environment {
 
         let token = match dev_mode.as_str() {
             "1" => None,
-            _ => Some(std::env::var("TURSO_TOKEN").expect("TURSO_TOKEN must be set"))
+            _ => Some(std::env::var("TURSO_AUTH_TOKEN").expect("TURSO_AUTH_TOKEN must be set"))
         };
 
         Environment { url, token }
