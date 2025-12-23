@@ -1,73 +1,60 @@
 use std::{fs, io};
 use std::process::{Command};
 use std::time::SystemTime;
-use libsql::{Builder};
-use regex::Regex;
-use std::fs::File;
+use libsql::{Builder, Connection, Row};
+use std::fs::{File};
 use std::io::prelude::*;
 use std::path::Path;
+use lazy_regex::{Regex};
 
 #[tokio::main]
 async fn main() -> Result<(), Box<libsql::Error>> {
     let start = SystemTime::now();
-    let url = std::env::var("TURSO_DATABASE_URL").expect("TURSO_DATABASE_URL must be set");
+    let env = Environment::new();
 
-    let mut rows;
-    {
-        let db = match std::env::var("DEV_MODE").unwrap().as_str() {
-            "0" => {
-                let token = std::env::var("TURSO_AUTH_TOKEN").expect("TURSO_AUTH_TOKEN must be set");
-                Builder::new_remote(url, token).build().await?
-            }
-            _ => Builder::new_local(url).build().await?
-        };
-
-        let conn = db.connect()?;
-
-        let relative_id = select_random_id();
-
-        rows = match conn
-            .query("SELECT photos.photo_id, taxa.name, photos.extension, photos.license, observers.login, observers.name FROM observations JOIN photos ON photos.observation_uuid == observations.observation_uuid JOIN taxa ON taxa.taxon_id == observations.taxon_id JOIN observers ON observers.observer_id == photos.observer_id WHERE relative_id == ?1 LIMIT 1", [relative_id])
-            .await {
-            Ok(rows) => { rows },
-            Err(err) => return Err(Box::new(err)),
-        };
-        conn.reset().await;
-    }
-    let row = rows.next().await?.unwrap();
+    let connection = build_connection(env).await?;
+    let relative_id = select_random_id();
+    let row = match get_row(relative_id, connection).await? {
+        Some(row) => row,
+        None => panic!("Got no row :(")
+    };
 
     for i in 0..row.column_count() {
         println!("Row {}: {:?}", i, row.get_value(i)?);
     }
 
-    let name = row.get_value(1)?;
-    let extension = row.get_value(2)?;
-    let image = get_image(*row.get_value(0)?.as_integer().unwrap() as u32, extension.as_text().unwrap().clone());
-    let license = row.get_value(3)?;
+    let constants = read_constants();
+    let replacements = generate_replacements(row, constants.1, constants.2);
+    let output = File::create("html/index.html").unwrap();
 
-    let cite = match row.get_value(5)?.is_null() {
-        true => row.get_value(4)?,
-        false => row.get_value(5)?
-    };
+    Page::new(constants.0)
+        .populate_page(replacements)
+        .write_page_to_file(output)
+        .expect("Should have been able to write file");
 
-    let citation = match license.as_text().unwrap().as_str() {
-        "CC0" => format!("{}, no rights reserved (CC0)", cite.as_text().unwrap()),
-        "PD" => String::from(""),
-        _ => format!("© {}, some rights reserved ({})", cite.as_text().unwrap(), license.as_text().unwrap())
-    };
-
-    generate_page(image, name.as_text().unwrap().clone(), citation);
-
-    copy_dir_all(Path::new("bundle"), Path::new("html")).expect("Couldn't copy favicon");
+    copy_dir_all(Path::new("bundle"), Path::new("html")).expect("Couldn't copy bundle");
 
     println!("Time Taken: {}ms", start.elapsed().unwrap().as_millis());
     Ok(())
 }
 
-fn select_random_id() -> u32 {
-    rand::random_range(1..=414405) as u32
+/// Builds connection based
+/// If not dev_mode then use a remote, otherwise use a local DB
+async fn build_connection(env: Environment) -> libsql::Result<Connection> {
+    let db = match env.token {
+        Some(t) => Builder::new_remote(env.url, t).build().await?,
+        None => Builder::new_local(env.url).build().await?
+    };
+
+    db.connect()
 }
 
+/// Selects a random number between 1 and 414,405
+/// This looks like a magic number, and it is.
+/// It is the number of observations in our database.
+fn select_random_id() -> u32 { rand::random_range(1..=414405) as u32 }
+
+/// Downloads a photo from the iNaturalist open data S3 bucket to 'image.<extension>'
 fn get_image(id: u32, extension: String) -> String {
     Command::new("aws")
         .arg("s3")
@@ -81,31 +68,7 @@ fn get_image(id: u32, extension: String) -> String {
     format!("image.{}", extension)
 }
 
-fn generate_page(file_name: String, taxon_name: String, cite: String) {
-    let template_path = Path::new("template.html");
-    let genus_path = Path::new("genus.csv");
-    let species_path = Path::new("species.csv");
-    let path_new_file = Path::new("html/index.html");
-    let mut file = File::create(path_new_file).unwrap();
-    let template = fs::read_to_string(template_path).expect("Should have been able to read template file");
-    let genus_list = fs::read_to_string(genus_path).expect("Should have been able to read genus file");
-    let species_list = fs::read_to_string(species_path).expect("Should have been able to read species file");
-
-    let image_src = Regex::new(r"#IMAGE#").unwrap();
-    let name = Regex::new(r"#NAME#").unwrap();
-    let genus = Regex::new(r"#GENUS#").unwrap();
-    let species = Regex::new(r"#SPECIES#").unwrap();
-    let citation = Regex::new(r"#CITATION#").unwrap();
-    let v = citation.replace(template.as_str(), cite);
-    let w = image_src.replace(v.as_ref(), file_name);
-    let x = name.replace(w.as_ref(), taxon_name);
-    let y = genus.replace(x.as_ref(), genus_list);
-    let z = species.replace(y.as_ref(), species_list);
-
-    file.write_all(z.as_bytes()).expect("Should have been able to write file");
-}
-
-
+/// Copies the source directory recursively to a destination
 fn copy_dir_all(src: impl AsRef<Path>, dst: impl AsRef<Path>) -> io::Result<()> {
     fs::create_dir_all(&dst)?;
     for entry in fs::read_dir(src)? {
@@ -118,4 +81,109 @@ fn copy_dir_all(src: impl AsRef<Path>, dst: impl AsRef<Path>) -> io::Result<()> 
         }
     }
     Ok(())
+}
+
+/// Reads files into memory, the HTML template, genus and species CSVs
+fn read_constants() -> (String, String, String) {
+    let template = fs::read_to_string("template.html").expect("Should have been able to read template file");
+    let genus_list = fs::read_to_string("genus.csv").expect("Should have been able to read genus file");
+    let species_list = fs::read_to_string("species.csv").expect("Should have been able to read species file");
+
+    (template, genus_list, species_list)
+}
+
+/// Generates a vector of replacements (tuples of Regex, String)
+/// So that the vector can be folded into a single Page
+fn generate_replacements(row: Row, genus_list: String, species_list: String) -> Vec<(Regex, String)> {
+
+    let taxon_name = row.get_value(1).expect("Couldn't get taxon_name");
+    let extension = row.get_value(2).expect("Couldn't get extension");
+    let image_path = get_image(*row.get_value(0).expect("Couldn't get image_id").as_integer().unwrap() as u32, extension.as_text().unwrap().clone());
+    let license = row.get_value(3).expect("Couldn't get license");
+
+    let cite = match row.get_value(5).expect("Couldn't get name").is_null() {
+        true => row.get_value(4).expect("Couldn't get username (this also logically can't happen)"),
+        false => row.get_value(5).expect("Couldn't get name (this logically can't happen")
+    };
+
+    let citation = match license.as_text().unwrap().as_str() {
+        "CC0" => format!("{}, no rights reserved (CC0)", cite.as_text().unwrap()),
+        "PD" => String::from(""),
+        _ => format!("© {}, some rights reserved ({})", cite.as_text().unwrap(), license.as_text().unwrap())
+    };
+
+    vec![
+        (Regex::new(r"#IMAGE#").expect("Won't happen"), image_path),
+        (Regex::new(r"#CITATION#").expect("Won't happen"), citation),
+        (Regex::new(r"#NAME#").expect("Won't happen"), taxon_name.as_text().unwrap().clone()),
+        (Regex::new(r"#GENUS#").expect("Won't happen"), genus_list),
+        (Regex::new(r"#SPECIES#").expect("Won't happen"), species_list)
+    ]
+}
+
+async fn get_row(id: u32, connection: Connection) -> libsql::Result<Option<Row>> {
+    let mut rows = match connection
+        .query("SELECT photos.photo_id, taxa.name, photos.extension, photos.license, observers.login, observers.name FROM observations JOIN photos ON photos.observation_uuid == observations.observation_uuid JOIN taxa ON taxa.taxon_id == observations.taxon_id JOIN observers ON observers.observer_id == photos.observer_id WHERE relative_id == ?1 LIMIT 1", [id]).await {
+        Ok(rows) => { rows },
+        Err(err) => return Err(err),
+    };
+    connection.reset().await;
+    rows.next().await
+}
+
+/// Environment variables passed to the program
+/// url: path to a sqlite database
+/// token: auth token for a Turso database
+struct Environment {
+    url: String,
+    token: Option<String>
+}
+
+impl Environment {
+    fn new() -> Environment {
+        let dev_mode = std::env::var("DEV_MODE")
+            .or::<String>(Ok(String::from("0")))
+            .unwrap();
+
+        let url = std::env::var("DATABASE_URL")
+            .expect("DATABASE_URL must be set");
+
+        let token = match dev_mode.as_str() {
+            "1" => None,
+            _ => Some(std::env::var("TURSO_TOKEN").expect("TURSO_TOKEN must be set"))
+        };
+
+        Environment { url, token }
+    }
+}
+
+/// Represents a webpage to be generated by replacing strings in a template
+struct Page {
+    contents: String
+}
+
+impl Page {
+    fn new(contents: String) -> Page {
+        Page{contents}
+    }
+
+    /// Replaces the first occurrence of a regex with a given replacement string
+    ///
+    /// Returns a new Page object with the updated contents.
+    fn replace(self, regex: Regex, replacement: String) -> Self {
+        Self::new(regex.replace(self.contents.as_ref(), replacement).parse().unwrap())
+    }
+
+    /// Uses the replace function to replace each regex defined in the replacements Vec with
+    /// its paired string.
+    fn populate_page(self, replacements: Vec<(Regex, String)>) -> Self {
+        replacements
+            .iter()
+            .fold(self, |acc, replacement| acc.replace(replacement.0.clone(), replacement.1.clone()))
+    }
+
+    /// Writes a Page object to a given File.
+    fn write_page_to_file(self, mut file: File) -> io::Result<()> {
+        file.write_all(self.contents.as_bytes())
+    }
 }
