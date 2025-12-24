@@ -12,8 +12,8 @@ async fn main() -> Result<(), Box<libsql::Error>> {
     let start = SystemTime::now();
     let env = Environment::new();
 
-    let connection = build_connection(env).await?;
     let relative_id = select_random_id(env.max);
+    let connection = build_connection(env).await?;
     let row = match get_row(relative_id, connection).await? {
         Some(row) => row,
         None => panic!("Got no row :(")
@@ -138,6 +138,7 @@ struct Environment {
     max: u32
 }
 
+
 impl Environment {
     fn new() -> Environment {
         let dev_mode = std::env::var("DEV_MODE")
@@ -145,8 +146,9 @@ impl Environment {
             .unwrap();
 
         let max: u32 = std::env::var("MAX_ID")
+            .or::<String>(Ok(String::from("414405")))
+            .unwrap()
             .parse()
-            .or::<u32>(Ok(414405))
             .unwrap();
 
         let url = std::env::var("DATABASE_URL")
