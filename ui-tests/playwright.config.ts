@@ -32,8 +32,6 @@ export default defineConfig({
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
     trace: 'on-first-retry',
     baseURL: process.env.PLAYWRIGHT_TEST_BASE_URL || `https://lichen.adarid.de`,
-    /* For local testing */
-    // baseURL: `file:${path.join(__dirname, '../html/index.html')}`,
   },
 
   /* Configure projects for major browsers */

@@ -39,12 +39,12 @@ jobs:
         run: npx playwright install --with-deps
       - name: Run Playwright tests
         env:
-          PLAYWRIGHT_TEST_BASE_URL: 'file:html/index.html'
+          PLAYWRIGHT_TEST_BASE_URL: 'file:index.html'
         working-directory: ./ui-tests
         run: npx playwright test
       - uses: actions/upload-artifact@v4
         if: ${{ !cancelled() }}
         with:
           name: playwright-report
-          path: playwright-report/
+          path: ui-tests/playwright-report/
           retention-days: 30
