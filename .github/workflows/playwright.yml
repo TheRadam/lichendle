@@ -26,7 +26,7 @@ jobs:
         run: cargo build --profile ${{ matrix.BUILD_TARGET }}
 
       - name: Generate html in "${{ matrix.BUILD_TARGET }}" mode
-        run: CARGO_INCREMENTAL="0" DEV_MODE="1" MAX_ID="1" RUST_MIN_STACK="33554432" DATABASE_URL="/ui-tests/test.db" cargo run --profile ${{ matrix.BUILD_TARGET }}
+        run: CARGO_INCREMENTAL="0" DEV_MODE="1" MAX_ID="1" RUST_MIN_STACK="33554432" DATABASE_URL="ui-tests/test.db" cargo run --profile ${{ matrix.BUILD_TARGET }}
 
       - uses: actions/setup-node@v4
         with:
