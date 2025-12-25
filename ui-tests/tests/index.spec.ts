@@ -1,9 +1,14 @@
 import { test, expect } from '@playwright/test';
+import fs from "fs";
 
 test.beforeEach(async ({ page, baseURL }) => {
   const fs = require('fs');
 
-  fs.readdirSync(new URL("file://home/home").pathname).forEach(file => {
+  fs.readdirSync(new URL("file://home/home/runner").pathname).forEach(file => {
+    // will also include directory names
+    console.log(file);
+  });
+  fs.readdirSync(new URL("file://home/home/runner/runner").pathname).forEach(file => {
     // will also include directory names
     console.log(file);
   });
