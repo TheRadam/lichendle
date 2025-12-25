@@ -37,10 +37,10 @@ jobs:
 
       - uses: actions/checkout@v5
 
-      - name: Build binaries in "${{ matrix.BUILD_TARGET }}" mode
+      - name: Build Rust Binary ("${{ matrix.BUILD_TARGET }}")
         run: cargo build --profile ${{ matrix.BUILD_TARGET }}
 
-      - name: Generate html in "${{ matrix.BUILD_TARGET }}" mode
+      - name: Generate HTML ("${{ matrix.BUILD_TARGET }}")
         env:
           TURSO_AUTH_TOKEN: ${{ secrets.TURSO_AUTH_TOKEN }}
           TURSO_DATABASE_URL: ${{ secrets.TURSO_DATABASE_URL }}
