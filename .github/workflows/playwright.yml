@@ -51,7 +51,7 @@ jobs:
         working-directory: ./ui-tests
       - name: Run Playwright tests
         env:
-          PLAYWRIGHT_TEST_BASE_URL: "file://html/index.html"
+          PLAYWRIGHT_TEST_BASE_URL: "file://home/runner/work/lichendle/lichendle/html/index.html"
         working-directory: ./ui-tests
         run: npx playwright test
       - uses: actions/upload-artifact@v4
