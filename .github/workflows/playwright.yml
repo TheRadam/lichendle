@@ -27,10 +27,8 @@ jobs:
       - name: Generate HTML ("${{ matrix.BUILD_TARGET }}")
         run: CARGO_INCREMENTAL="0" DEV_MODE="1" MAX_ID="1" RUST_MIN_STACK="33554432" DATABASE_URL="ui-tests/test.db" cargo run --profile ${{ matrix.BUILD_TARGET }}
 
-      - run: ls
-      - run: cp -r html/ ui-tests/
-      - run: ls ui-tests
-      - run: ls ui-tests/html
+#      - name: Copy HTML to ui-tests
+#        run: cp -r html/ ui-tests/
       - uses: actions/setup-node@v4
         with:
           node-version: lts/*

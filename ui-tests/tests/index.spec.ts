@@ -5,5 +5,5 @@ test.beforeEach(async ({ page, baseURL }) => {
 });
 
 test('has title', async ({ page }) => {
-  await expect(page).toHaveTitle("Lichendle");
+  await expect(page).toHaveTitle("Not Lichendle");
 });
