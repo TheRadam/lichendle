@@ -37,8 +37,10 @@ jobs:
       - name: Install Playwright Browsers
         working-directory: ./ui-tests
         run: npx playwright install --with-deps
-      - name: Print working directory
-        run: cp -r ./html /ui-tests/html
+      - run: ls
+      - run: pwd
+      - run: mkdir ./ui-test/html
+      - run: cp -r ./html ./ui-tests/html
       - run: ls
       - run: ls
         working-directory: ./ui-tests
