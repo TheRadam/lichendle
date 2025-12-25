@@ -26,7 +26,7 @@ jobs:
 
       - name: Generate HTML ("${{ matrix.BUILD_TARGET }}")
         run: CARGO_INCREMENTAL="0" DEV_MODE="1" MAX_ID="1" RUST_MIN_STACK="33554432" DATABASE_URL="ui-tests/test.db" cargo run --profile ${{ matrix.BUILD_TARGET }}
-
+      - run: cp -a /html/. /ui-tests/
       - uses: actions/setup-node@v4
         with:
           node-version: lts/*
@@ -38,7 +38,7 @@ jobs:
         run: npx playwright install --with-deps
       - name: Run Playwright tests
         env:
-          PLAYWRIGHT_TEST_BASE_URL: "file:/home/home/runner/work/lichendle/lichendle/template.html"
+          PLAYWRIGHT_TEST_BASE_URL: "http://localhost:3000/"
         working-directory: ./ui-tests
         run: npx playwright test
       - uses: actions/upload-artifact@v4
