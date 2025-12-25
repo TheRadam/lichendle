@@ -19,7 +19,8 @@ jobs:
             target
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
 
-      - uses: actions/checkout@v5
+      - name: Checkout
+        uses: actions/checkout@v5
 
       - name: Build Rust Binary ("${{ matrix.BUILD_TARGET }}")
         run: cargo build --profile ${{ matrix.BUILD_TARGET }}
@@ -29,7 +30,8 @@ jobs:
 
 #      - name: Copy HTML to ui-tests
 #        run: cp -r html/ ui-tests/
-      - uses: actions/setup-node@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
         with:
           node-version: lts/*
       - name: Install dependencies
@@ -43,7 +45,8 @@ jobs:
           PLAYWRIGHT_TEST_BASE_URL: "http://localhost:3000/"
         working-directory: ./ui-tests
         run: npx playwright test
-      - uses: actions/upload-artifact@v4
+      - name: Upload Report
+        uses: actions/upload-artifact@v4
         if: ${{ !cancelled() }}
         with:
           name: playwright-report
