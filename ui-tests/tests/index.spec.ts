@@ -8,6 +8,7 @@ test.beforeEach(async ({ page, baseURL }) => {
     // will also include directory names
     console.log(file);
   });
+  console.log("AHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH");
   fs.readdirSync(new URL("file://home/home/runner/runner/work/work").pathname).forEach(file => {
     // will also include directory names
     console.log(file);

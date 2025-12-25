@@ -159,8 +159,8 @@ impl Environment {
             _ => Some(std::env::var("TURSO_TOKEN").expect("TURSO_TOKEN must be set"))
         };
 
-        println!(format!("max: {}", max));
-        println!(format!("dev_mode: {}", dev_mode));
+        println!("max: {}", max);
+        println!("dev_mode: {}", dev_mode);
 
         Environment { url, token, max }
     }
