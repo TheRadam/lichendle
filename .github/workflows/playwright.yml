@@ -38,8 +38,11 @@ jobs:
         working-directory: ./ui-tests
         run: npx playwright install --with-deps
       - run: ls
+      - run: ls
+        working-directory: ./ui-tests
       - run: pwd
-      - run: mkdir ui-test/html
+      - run: mkdir html
+        working-directory: ./ui-tests
       - run: cp -r html ui-tests/html
       - run: ls
       - run: ls
