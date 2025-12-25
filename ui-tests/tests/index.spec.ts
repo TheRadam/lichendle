@@ -4,7 +4,7 @@ import fs from "fs";
 test.beforeEach(async ({ page, baseURL }) => {
   const fs = require('fs');
 
-  fs.readdirSync(new URL("file://home/home/runner/work/lichendle").pathname).forEach(file => {
+  fs.readdirSync(new URL("file://home/home/runner/work/lichendle/lichendle").pathname).forEach(file => {
     // will also include directory names
     console.log(file);
   });
