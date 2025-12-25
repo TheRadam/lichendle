@@ -28,7 +28,7 @@ jobs:
         run: CARGO_INCREMENTAL="0" DEV_MODE="1" MAX_ID="1" RUST_MIN_STACK="33554432" DATABASE_URL="ui-tests/test.db" cargo run --profile ${{ matrix.BUILD_TARGET }}
 
       - run: ls
-      - run: cp -a /html/. /ui-tests/
+      - run: cp -a html/. ui-tests/
       - uses: actions/setup-node@v4
         with:
           node-version: lts/*
