@@ -12,8 +12,8 @@ async fn main() -> Result<(), Box<libsql::Error>> {
     let start = SystemTime::now();
     let env = Environment::new();
 
+    let relative_id = select_random_id(env.max);
     let connection = build_connection(env).await?;
-    let relative_id = select_random_id();
     let row = match get_row(relative_id, connection).await? {
         Some(row) => row,
         None => panic!("Got no row :(")
@@ -49,10 +49,8 @@ async fn build_connection(env: Environment) -> libsql::Result<Connection> {
     db.connect()
 }
 
-/// Selects a random number between 1 and 414,405
-/// This looks like a magic number, and it is.
-/// It is the number of observations in our database.
-fn select_random_id() -> u32 { rand::random_range(1..=414405) as u32 }
+/// Selects a random number between 1 and max 414,405
+fn select_random_id(max: u32) -> u32 { rand::random_range(1..=max) }
 
 /// Downloads a photo from the iNaturalist open data S3 bucket to 'image.<extension>'
 fn get_image(id: u32, extension: String) -> String {
@@ -136,13 +134,21 @@ async fn get_row(id: u32, connection: Connection) -> libsql::Result<Option<Row>>
 /// token: auth token for a Turso database
 struct Environment {
     url: String,
-    token: Option<String>
+    token: Option<String>,
+    max: u32
 }
+
 
 impl Environment {
     fn new() -> Environment {
         let dev_mode = std::env::var("DEV_MODE")
             .or::<String>(Ok(String::from("0")))
+            .unwrap();
+
+        let max: u32 = std::env::var("MAX_ID")
+            .or::<String>(Ok(String::from("414405")))
+            .unwrap()
+            .parse()
             .unwrap();
 
         let url = std::env::var("DATABASE_URL")
@@ -153,7 +159,10 @@ impl Environment {
             _ => Some(std::env::var("TURSO_AUTH_TOKEN").expect("TURSO_AUTH_TOKEN must be set"))
         };
 
-        Environment { url, token }
+        println!("max: {}", max);
+        println!("dev_mode: {}", dev_mode);
+
+        Environment { url, token, max }
     }
 }
 
