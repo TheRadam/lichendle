@@ -37,9 +37,11 @@ jobs:
       - name: Install Playwright Browsers
         working-directory: ./ui-tests
         run: npx playwright install --with-deps
+      - name: Print working directory
+        run: pwd
       - name: Run Playwright tests
         env:
-          PLAYWRIGHT_TEST_BASE_URL: 'file:./html/index.html'
+          PLAYWRIGHT_TEST_BASE_URL: 'file:../../html/index.html'
         working-directory: ./ui-tests
         run: npx playwright test
       - uses: actions/upload-artifact@v4
