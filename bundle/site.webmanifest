@@ -16,7 +16,7 @@
     }
   ],
   "theme_color": "#006045",
-  "background_color": "#ffffff",
+  "background_color": "#006045",
   "display": "standalone",
   "start_url": "https://lichen.adarid.de"
 }

@@ -14,9 +14,9 @@ async fn main() -> Result<(), Box<libsql::Error>> {
 
     let relative_id = select_random_id(env.max);
     let connection = build_connection(env).await?;
-    let row = match get_row(relative_id, connection).await? {
+    let row = match get_row(relative_id.clone(), connection).await? {
         Some(row) => row,
-        None => panic!("Got no row :(")
+        None => panic!("Got no row :( {}", relative_id),
     };
 
     for i in 0..row.column_count() {
@@ -137,7 +137,6 @@ struct Environment {
     token: Option<String>,
     max: u32
 }
-
 
 impl Environment {
     fn new() -> Environment {
