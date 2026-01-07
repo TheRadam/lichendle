@@ -1,4 +1,12 @@
-function classify(name) {
+let toast = false;
+let incorrectCount = 0;
+const MAX_GUESSES = 5;
+
+function capitalizeFirstLetter(val) {
+    return String(val).charAt(0).toUpperCase() + String(val).slice(1);
+}
+
+function classify(name, taxonId) {
     name = name.trim().toLowerCase();
     let genus = document.getElementById("genus").value.trim().toLowerCase();
     let species = document.getElementById("species").value.trim().toLowerCase();
@@ -8,10 +16,27 @@ function classify(name) {
     setBorder(expectedSpecies == species, document.getElementById("species"));
 
     if (expectedGenus == genus && expectedSpecies == species) {
-        document.getElementById("result").innerHTML = "<br><span class='text-emerald-600'>YOU GOT THAT LICHEN!</span>"
+        revealToast(name, taxonId);
+        document.getElementById("result").innerHTML = "<br><span data-testid='result' class='text-emerald-600'>YOU GOT THAT LICHEN!</span>"
     } else {
-        document.getElementById("result").innerHTML = "<br><span class='text-red-600'>WRONG!</span>"
+        incorrectCount++;
+        document.getElementById("button").textContent = incorrectCount + '/' + MAX_GUESSES;
+
+        if (incorrectCount >= MAX_GUESSES) {
+            revealToast(name, taxonId);
+            document.getElementById("genus").setAttribute("disabled", true);
+            document.getElementById("species").setAttribute("disabled", true);
+            document.getElementById("button").setAttribute("disabled", true);
+            document.getElementById("result").innerHTML = "<br><span data-testid='result' class='text-red-600'>WRONG!</span>";
+        }
     }
+}
+
+function revealToast(name, taxonId) {
+    if (!toast)  {
+        Toastify({position: 'center', newWindow: true, duration: -1, style: { background: "linear-gradient(to right, #006045, #009966)"}, className: "lg:text-base lg:mt-2 text-3xl", text: capitalizeFirstLetter(name)}).showToast();
+        toast = true;
+    } //destination: "https://www.inaturalist.org/taxa/" + taxonId
 }
 
 function setBorder(condition, input) {
@@ -21,5 +46,8 @@ function setBorder(condition, input) {
         input.setAttribute("disabled", true)
     } else {
         input.classList.add('border-red-600');
+        input.classList.remove('wrong');
+        input.offsetWidth //hacky :)
+        input.classList.add('wrong');
     }
 }

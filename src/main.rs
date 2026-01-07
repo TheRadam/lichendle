@@ -13,6 +13,7 @@ async fn main() -> Result<(), Box<libsql::Error>> {
     let env = Environment::new();
 
     let relative_id = select_random_id(env.max);
+    println!("relative_id {:?}", relative_id.clone());
     let connection = build_connection(env).await?;
     let row = match get_row(relative_id.clone(), connection).await? {
         Some(row) => row,
@@ -94,9 +95,10 @@ fn read_constants() -> (String, String, String) {
 /// So that the vector can be folded into a single Page
 fn generate_replacements(row: Row, genus_list: String, species_list: String) -> Vec<(Regex, String)> {
 
+    let taxon_id = *row.get_value(0).expect("Couldn't get image_id").as_integer().unwrap() as u32;
     let taxon_name = row.get_value(1).expect("Couldn't get taxon_name");
     let extension = row.get_value(2).expect("Couldn't get extension");
-    let image_path = get_image(*row.get_value(0).expect("Couldn't get image_id").as_integer().unwrap() as u32, extension.as_text().unwrap().clone());
+    let image_path = get_image(taxon_id.clone(), extension.as_text().unwrap().clone());
     let license = row.get_value(3).expect("Couldn't get license");
 
     let cite = match row.get_value(5).expect("Couldn't get name").is_null() {
@@ -115,7 +117,8 @@ fn generate_replacements(row: Row, genus_list: String, species_list: String) -> 
         (Regex::new(r"#CITATION#").expect("Won't happen"), citation),
         (Regex::new(r"#NAME#").expect("Won't happen"), taxon_name.as_text().unwrap().clone()),
         (Regex::new(r"#GENUS#").expect("Won't happen"), genus_list),
-        (Regex::new(r"#SPECIES#").expect("Won't happen"), species_list)
+        (Regex::new(r"#SPECIES#").expect("Won't happen"), species_list),
+        (Regex::new(r"#TAXON_ID#").expect("Won't happen"), taxon_id.to_string())
     ]
 }
 
