@@ -1,5 +1,5 @@
 let toast = false;
-let incorrectCount = 0;
+let guesses = 0;
 const MAX_GUESSES = 5;
 
 function capitalizeFirstLetter(val) {
@@ -7,6 +7,8 @@ function capitalizeFirstLetter(val) {
 }
 
 function classify(name, taxonId) {
+    guesses++;
+    document.getElementById("button").textContent = guesses + '/' + MAX_GUESSES;
     name = name.trim().toLowerCase();
     let genus = document.getElementById("genus").value.trim().toLowerCase();
     let species = document.getElementById("species").value.trim().toLowerCase();
@@ -17,12 +19,10 @@ function classify(name, taxonId) {
 
     if (expectedGenus == genus && expectedSpecies == species) {
         revealToast(name, taxonId);
+        document.getElementById("button").setAttribute("disabled", true);
         document.getElementById("result").innerHTML = "<br><span data-testid='result' class='text-emerald-600'>YOU GOT THAT LICHEN!</span>"
     } else {
-        incorrectCount++;
-        document.getElementById("button").textContent = incorrectCount + '/' + MAX_GUESSES;
-
-        if (incorrectCount >= MAX_GUESSES) {
+        if (guesses >= MAX_GUESSES) {
             revealToast(name, taxonId);
             document.getElementById("genus").setAttribute("disabled", true);
             document.getElementById("species").setAttribute("disabled", true);

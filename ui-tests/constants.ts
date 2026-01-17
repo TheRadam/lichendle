@@ -1,5 +1,3 @@
-
-
 export const CONSTANTS = {
     CORRECT_GENUS: 'Lobaria',
     CORRECT_SPECIES: 'pulmonaria',
