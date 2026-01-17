@@ -10,3 +10,11 @@ export async function assertCorrectResult(page: any) {
     let result = page.getByText(CONSTANTS.SUCCESS_TEXT);
     await expect(result).toContainClass('text-emerald-600');
 }
+
+export async function clickUntilFail(page: any) {
+    await page.getByText("0/5").click();
+    await page.getByText("1/5").click();
+    await page.getByText("2/5").click();
+    await page.getByText("3/5").click();
+    await page.getByText("4/5").click();
+}
