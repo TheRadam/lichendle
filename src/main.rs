@@ -95,11 +95,12 @@ fn read_constants() -> (String, String, String) {
 /// So that the vector can be folded into a single Page
 fn generate_replacements(row: Row, genus_list: String, species_list: String) -> Vec<(Regex, String)> {
 
-    let taxon_id = *row.get_value(0).expect("Couldn't get image_id").as_integer().unwrap() as u32;
+    let image_id = *row.get_value(0).expect("Couldn't get image_id").as_integer().unwrap() as u32;
     let taxon_name = row.get_value(1).expect("Couldn't get taxon_name");
     let extension = row.get_value(2).expect("Couldn't get extension");
-    let image_path = get_image(taxon_id.clone(), extension.as_text().unwrap().clone());
+    let image_path = get_image(image_id.clone(), extension.as_text().unwrap().clone());
     let license = row.get_value(3).expect("Couldn't get license");
+    let taxon_id = *row.get_value(6).expect("Couldn't get taxon_id").as_integer().unwrap() as u32;
 
     let cite = match row.get_value(5).expect("Couldn't get name").is_null() {
         true => row.get_value(4).expect("Couldn't get username (this also logically can't happen)"),
@@ -124,7 +125,7 @@ fn generate_replacements(row: Row, genus_list: String, species_list: String) -> 
 
 async fn get_row(id: u32, connection: Connection) -> libsql::Result<Option<Row>> {
     let mut rows = match connection
-        .query("SELECT photos.photo_id, taxa.name, photos.extension, photos.license, observers.login, observers.name FROM observations JOIN photos ON photos.observation_uuid == observations.observation_uuid JOIN taxa ON taxa.taxon_id == observations.taxon_id JOIN observers ON observers.observer_id == photos.observer_id WHERE relative_id == ?1 LIMIT 1", [id]).await {
+        .query("SELECT photos.photo_id, taxa.name, photos.extension, photos.license, observers.login, observers.name, taxa.taxon_id FROM observations JOIN photos ON photos.observation_uuid == observations.observation_uuid JOIN taxa ON taxa.taxon_id == observations.taxon_id JOIN observers ON observers.observer_id == photos.observer_id WHERE relative_id == ?1 LIMIT 1", [id]).await {
         Ok(rows) => { rows },
         Err(err) => return Err(err),
     };

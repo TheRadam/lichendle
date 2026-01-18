@@ -34,9 +34,9 @@ function classify(name, taxonId) {
 
 function revealToast(name, taxonId) {
     if (!toast)  {
-        Toastify({position: 'center', newWindow: true, duration: -1, style: { background: "linear-gradient(to right, #006045, #009966)"}, className: "lg:text-base lg:mt-2 text-3xl", text: capitalizeFirstLetter(name)}).showToast();
+        Toastify({destination: "https://www.inaturalist.org/taxa/" + taxonId, position: 'center', newWindow: true, duration: -1, style: { background: "linear-gradient(to right, #006045, #009966)"}, className: "lg:text-base lg:mt-2 text-3xl", text: capitalizeFirstLetter(name)}).showToast();
         toast = true;
-    } //destination: "https://www.inaturalist.org/taxa/" + taxonId
+    }
 }
 
 function setBorder(condition, input) {
