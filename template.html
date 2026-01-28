@@ -69,13 +69,13 @@
                             #SPECIES#
                         </datalist>
 
-                        <button id="button" type="button" class="text-white dark:bg-emerald-800 dark:hover:bg-emerald-900 bg-emerald-600 hover:bg-emerald-700 shadow-xs font-medium leading-5 rounded text-3xl lg:text-xl px-3 py-3.5" onclick="classify('#NAME#', '#TAXON_ID#')">0/5</button>
+                        <button id="button" type="button" class="text-white dark:bg-emerald-800 dark:hover:bg-emerald-900 bg-emerald-600 hover:bg-emerald-700 shadow-xs font-medium leading-5 rounded text-3xl lg:text-xl px-3 py-3.5" onclick="classy()">0/5</button>
                     </div>
                     <div id="result" class="h-[1rem] text-center w-full lg:w-2/5 md:w-3/5 m-auto text-5xl lg:text-xl font-semibold text-gray-900 dark:text-white"></div>
                 </div>
 
             </div>
         </div>
-        <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script><script src="classify.js"></script><script src="darkmode.js"></script>
+        <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script><script src="classify.js"></script><script src="darkmode.js"></script><script>document.getElementById("species").addEventListener("keydown", function (e) { if (e.code === "Enter") classy(); });</script><script>function classy() {classify('#NAME#', '#TAXON_ID#')}</script>
     </body>
 </html>
